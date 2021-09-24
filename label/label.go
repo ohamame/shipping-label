@@ -1,10 +1,12 @@
 package label
 
 import (
+	"io"
+
 	"github.com/signintech/gopdf"
 )
 
-func CreateShippingLabelPdf() error {
+func CreateShippingLabelPdf(w io.Writer) error {
 	pdf := gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
 	pdf.AddPage()
@@ -17,7 +19,15 @@ func CreateShippingLabelPdf() error {
 	if err != nil {
 		return err
 	}
-	pdf.Cell(nil, "hello world")
-	pdf.WritePdf("output.pdf")
+
+	err = pdf.Cell(nil, "hello world")
+	if err != nil {
+		return err
+	}
+
+	err = pdf.Write(w)
+	if err != nil {
+		return err
+	}
 	return nil
 }
