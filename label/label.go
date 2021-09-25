@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/mitchellh/go-wordwrap"
@@ -60,67 +62,93 @@ func NewLabel(columnCount int, rowCount int, pageSize gopdf.Rect, fontSize float
 func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) error {
 	pdf := gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{PageSize: l.PageSize})
-	pdf.AddPage()
-	err := pdf.AddTTFFont("opensans", "./fonts/opensans.ttf")
-	if err != nil {
-		return err
-	}
 
-	err = pdf.SetFont("opensans", "", l.FontSize)
-	if err != nil {
-		return err
-	}
+	// sort by order number
+	sort.Slice(contents, func(i, j int) bool {
+		num1, err := strconv.ParseUint(contents[i].OrderNumber, 10, 32)
+		if err != nil {
+			fmt.Println(err)
+			return false
+		}
+		num2, err := strconv.ParseUint(contents[j].OrderNumber, 10, 32)
+		if err != nil {
+			fmt.Println(err)
+			return false
+		}
+		return num1 < num2
+	})
 
-	err = l.drawGrids(&pdf)
-	if err != nil {
-		return err
-	}
+	labelsPerPage := l.ColumnCount * l.RowCount
+	totalPages := int(math.Ceil(float64(len(contents)) / float64(labelsPerPage)))
 
-	columnWidth := l.PageSize.W / float64(l.ColumnCount)
-	rowHeight := l.PageSize.H / float64(l.RowCount)
-	textWidth := (columnWidth - (2 * l.CellXPadding))
-	fmt.Printf("Page size: %f x %f\nCol Width:%f\nRow Height:%f\nText Width: %f\n", l.PageSize.H, l.PageSize.W, columnWidth, rowHeight, textWidth)
+	for page := 0; page < totalPages; page++ {
+		startIndex := page * labelsPerPage
+		endIndex := int(math.Min(float64(page*labelsPerPage+labelsPerPage), float64(len(contents))))
+		pageContents := contents[startIndex:endIndex]
+		fmt.Printf("Page size: %d", len(pageContents))
 
-	// TODO: paging
-	for i, c := range contents {
-		position := i // TODO: allow offset
-		row := int(math.Floor(float64(position) / float64(l.ColumnCount)))
-		column := position % l.ColumnCount
-		startX := columnWidth * float64(column)
-		startY := rowHeight * float64(row)
-
-		fmt.Printf("Position: %d, row: %d, column: %d\n", position, row, column)
-
-		// Note: Wraps word by a character limit, not particularly accurate as
-		// not all characters are equal.
-		wrappedText := wordwrap.WrapString(c.GetText(), 40)
-		lines, err := pdf.SplitText(wrappedText, textWidth)
+		pdf.AddPage()
+		err := pdf.AddTTFFont("opensans", "./fonts/opensans.ttf")
 		if err != nil {
 			return err
 		}
 
-		// Order Number at top left
-		pdf.SetX(startX + l.CellXPadding)
-		pdf.SetY(startY + l.CellYPadding)
-		pdf.Cell(nil, "Order ")
-		pdf.Cell(nil, c.OrderNumber)
+		err = pdf.SetFont("opensans", "", l.FontSize)
+		if err != nil {
+			return err
+		}
 
-		// Output each line as text at bottom left
-		for i, line := range lines {
-			lineStartX := startX + l.CellXPadding
-			lineStartY := startY + rowHeight - l.CellYPadding - (l.LineHeight * float64(len(lines)-i))
+		err = l.drawGrids(&pdf)
+		if err != nil {
+			return err
+		}
 
-			pdf.SetX(lineStartX)
-			pdf.SetY(lineStartY)
+		columnWidth := l.PageSize.W / float64(l.ColumnCount)
+		rowHeight := l.PageSize.H / float64(l.RowCount)
+		textWidth := (columnWidth - (2 * l.CellXPadding))
+		fmt.Printf("Page size: %f x %f\nCol Width:%f\nRow Height:%f\nText Width: %f\n", l.PageSize.H, l.PageSize.W, columnWidth, rowHeight, textWidth)
 
-			err = pdf.Cell(nil, line)
+		// TODO: paging
+		for i, c := range pageContents {
+			position := i // TODO: allow offset
+			row := int(math.Floor(float64(position) / float64(l.ColumnCount)))
+			column := position % l.ColumnCount
+			startX := columnWidth * float64(column)
+			startY := rowHeight * float64(row)
+
+			fmt.Printf("Position: %d, row: %d, column: %d\n", position, row, column)
+
+			// Note: Wraps word by a character limit, not particularly accurate as
+			// not all characters are equal.
+			wrappedText := wordwrap.WrapString(c.GetText(), 40)
+			lines, err := pdf.SplitText(wrappedText, textWidth)
 			if err != nil {
 				return err
+			}
+
+			// Order Number at top left
+			pdf.SetX(startX + l.CellXPadding)
+			pdf.SetY(startY + l.CellYPadding)
+			pdf.Cell(nil, "Order ")
+			pdf.Cell(nil, c.OrderNumber)
+
+			// Output each line as text at bottom left
+			for i, line := range lines {
+				lineStartX := startX + l.CellXPadding
+				lineStartY := startY + rowHeight - l.CellYPadding - (l.LineHeight * float64(len(lines)-i))
+
+				pdf.SetX(lineStartX)
+				pdf.SetY(lineStartY)
+
+				err = pdf.Cell(nil, line)
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
 
-	err = pdf.Write(w)
+	err := pdf.Write(w)
 	if err != nil {
 		return err
 	}
