@@ -108,7 +108,6 @@ func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) erro
 		textWidth := (columnWidth - (2 * l.CellXPadding))
 		fmt.Printf("Page size: %f x %f\nCol Width:%f\nRow Height:%f\nText Width: %f\n", l.PageSize.H, l.PageSize.W, columnWidth, rowHeight, textWidth)
 
-		// TODO: paging
 		for i, c := range pageContents {
 			position := i // TODO: allow offset
 			row := int(math.Floor(float64(position) / float64(l.ColumnCount)))
