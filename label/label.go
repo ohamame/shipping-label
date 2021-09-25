@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"strings"
 
+	"github.com/mitchellh/go-wordwrap"
 	"github.com/signintech/gopdf"
 )
 
@@ -19,16 +21,40 @@ type Label struct {
 }
 
 type LabelContent struct {
-	OrderNumber string
-	Name        string
-	Address     string
-	City        string
-	PhoneNumber string
-	PostCode    string
+	OrderNumber  string `csv:"Order Number"`
+	Name         string `csv:"Full Name (Shipping)"`
+	Address      string `csv:"Address (Shipping)"`
+	City         string `csv:"City (Shipping)"`
+	PhoneNumber  string `csv:"Phone (Billing)"`
+	PostCode     string `csv:"Postcode (Shipping)"`
+	CustomerNote string `csv:"Customer Note"`
+}
+
+func (c LabelContent) GetText() string {
+	lines := []string{}
+	if c.Name != "" {
+		lines = append(lines, c.Name)
+	}
+	if c.Address != "" {
+		lines = append(lines, c.Address)
+	}
+	if c.City != "" {
+		lines = append(lines, c.City)
+	}
+	if c.PostCode != "" {
+		lines = append(lines, c.PostCode)
+	}
+	if c.PhoneNumber != "" {
+		lines = append(lines, c.PhoneNumber)
+	}
+	if c.CustomerNote != "" {
+		lines = append(lines, "Customer Note: "+c.CustomerNote)
+	}
+	return strings.Join(lines, "\n")
 }
 
 func NewLabel(columnCount int, rowCount int, pageSize gopdf.Rect, fontSize float64) Label {
-	return Label{ColumnCount: columnCount, RowCount: rowCount, PageSize: pageSize, FontSize: fontSize, CellXPadding: 20, CellYPadding: 15, LineHeight: 12}
+	return Label{ColumnCount: columnCount, RowCount: rowCount, PageSize: pageSize, FontSize: fontSize, CellXPadding: 20, CellYPadding: 20, LineHeight: 12}
 }
 
 func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) error {
@@ -52,7 +78,7 @@ func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) erro
 
 	columnWidth := l.PageSize.W / float64(l.ColumnCount)
 	rowHeight := l.PageSize.H / float64(l.RowCount)
-	textWidth := (columnWidth - (2 * l.CellXPadding)) * 0.7
+	textWidth := (columnWidth - (2 * l.CellXPadding))
 	fmt.Printf("Page size: %f x %f\nCol Width:%f\nRow Height:%f\nText Width: %f\n", l.PageSize.H, l.PageSize.W, columnWidth, rowHeight, textWidth)
 
 	// TODO: paging
@@ -64,15 +90,25 @@ func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) erro
 		startY := rowHeight * float64(row)
 
 		fmt.Printf("Position: %d, row: %d, column: %d\n", position, row, column)
-		lines, err := pdf.SplitText(c.Address, textWidth)
+
+		// Note: Wraps word by a character limit, not particularly accurate as
+		// not all characters are equal.
+		wrappedText := wordwrap.WrapString(c.GetText(), 40)
+		lines, err := pdf.SplitText(wrappedText, textWidth)
 		if err != nil {
 			return err
 		}
 
-		// Output each line as text
+		// Order Number at top left
+		pdf.SetX(startX + l.CellXPadding)
+		pdf.SetY(startY + l.CellYPadding)
+		pdf.Cell(nil, "Order ")
+		pdf.Cell(nil, c.OrderNumber)
+
+		// Output each line as text at bottom left
 		for i, line := range lines {
 			lineStartX := startX + l.CellXPadding
-			lineStartY := startY + rowHeight - (l.CellYPadding * 2) - (l.LineHeight * float64(len(lines)-i))
+			lineStartY := startY + rowHeight - l.CellYPadding - (l.LineHeight * float64(len(lines)-i))
 
 			pdf.SetX(lineStartX)
 			pdf.SetY(lineStartY)

@@ -1,3 +1,7 @@
+github.com/gocarina/gocsv v0.0.0-20210516172204-ca9e8a8ddea8 h1:hp1oqdzmv37vPLYFGjuM/RmUgUMfD9vQfMszc54l55Y=
+github.com/gocarina/gocsv v0.0.0-20210516172204-ca9e8a8ddea8/go.mod h1:5YoVOkjYAQumqlV356Hj3xeYh4BdZuLE0/nRkf2NKkI=
+github.com/mitchellh/go-wordwrap v1.0.1 h1:TLuKupo69TCn6TQSyGxwI1EblZZEsQ0vMlAFQflz0v0=
+github.com/mitchellh/go-wordwrap v1.0.1/go.mod h1:R62XHJLzvMFRBbcrT7m7WgmE1eOyTSsCt+hzestvNj0=
 github.com/phpdave11/gofpdi v1.0.11 h1:wsBNx+3S0wy1dEp6fzv281S74ogZGgIdYWV2PugWgho=
 github.com/phpdave11/gofpdi v1.0.11/go.mod h1:vBmVV0Do6hSBHC8uKUQ71JGW+ZGQq74llk/7bXwjDoI=
 github.com/pkg/errors v0.8.1 h1:iURUrRGxPUNPdy5/HRSm+Yj6okJ6UtLINN0Q9M4+h3I=
