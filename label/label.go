@@ -50,13 +50,13 @@ func (c LabelContent) GetText() string {
 		lines = append(lines, c.PhoneNumber)
 	}
 	if c.CustomerNote != "" {
-		lines = append(lines, "Customer Note: "+c.CustomerNote)
+		lines = append(lines, "Customer Note:\n"+c.CustomerNote)
 	}
 	return strings.Join(lines, "\n")
 }
 
 func NewLabel(columnCount int, rowCount int, pageSize gopdf.Rect, fontSize float64) Label {
-	return Label{ColumnCount: columnCount, RowCount: rowCount, PageSize: pageSize, FontSize: fontSize, CellXPadding: 20, CellYPadding: 20, LineHeight: 12}
+	return Label{ColumnCount: columnCount, RowCount: rowCount, PageSize: pageSize, FontSize: fontSize, CellXPadding: 20, CellYPadding: 20, LineHeight: 14}
 }
 
 func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) error {
@@ -130,6 +130,15 @@ func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) erro
 			pdf.SetY(startY + l.CellYPadding)
 			pdf.Cell(nil, "Order ")
 			pdf.Cell(nil, c.OrderNumber)
+			pdf.SetX(startX + l.CellXPadding)
+			pdf.SetY(startY + l.CellYPadding + l.LineHeight)
+			pdf.Cell(nil, "Thank you for your order!")
+
+			// Logo at top right
+			imageSize := &gopdf.Rect{H: 60, W: 60}
+			logoX := startX + columnWidth - l.CellXPadding - imageSize.W
+			logoY := startY + l.CellYPadding
+			pdf.Image("./images/logo.png", logoX, logoY, imageSize)
 
 			// Output each line as text at bottom left
 			for i, line := range lines {
