@@ -45,6 +45,11 @@ func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) erro
 		return err
 	}
 
+	err = l.drawGrids(&pdf)
+	if err != nil {
+		return err
+	}
+
 	columnWidth := l.PageSize.W / float64(l.ColumnCount)
 	rowHeight := l.PageSize.H / float64(l.RowCount)
 	textWidth := columnWidth - (2 * l.CellXPadding)
@@ -81,5 +86,27 @@ func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) erro
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (l Label) drawGrids(pdf *gopdf.GoPdf) error {
+	pdf.SetLineWidth(0.5)
+	pdf.SetLineType("dashed")
+
+	columnWidth := l.PageSize.W / float64(l.ColumnCount)
+	rowHeight := l.PageSize.H / float64(l.RowCount)
+
+	// draw vertical lines
+	for i := 0; i < l.ColumnCount; i++ {
+		x := float64(columnWidth) * float64(i+1)
+		pdf.Line(x, 0, x, l.PageSize.H)
+	}
+
+	// draw horizontal lines
+	for i := 0; i < l.RowCount; i++ {
+		y := float64(rowHeight) * float64(i+1)
+		pdf.Line(0, y, l.PageSize.W, y)
+	}
+
 	return nil
 }
