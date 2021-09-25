@@ -9,10 +9,12 @@ import (
 )
 
 type Label struct {
-	ColumnCount int
-	RowCount    int
-	PageSize    gopdf.Rect
-	FontSize    float64
+	ColumnCount  int
+	RowCount     int
+	PageSize     gopdf.Rect
+	FontSize     float64
+	CellXPadding float64
+	CellYPadding float64
 }
 
 type LabelContent struct {
@@ -25,7 +27,7 @@ type LabelContent struct {
 }
 
 func NewLabel(columnCount int, rowCount int, pageSize gopdf.Rect, fontSize float64) Label {
-	return Label{ColumnCount: columnCount, RowCount: rowCount, PageSize: pageSize, FontSize: fontSize}
+	return Label{ColumnCount: columnCount, RowCount: rowCount, PageSize: pageSize, FontSize: fontSize, CellXPadding: 20, CellYPadding: 15}
 }
 
 func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) error {
@@ -52,8 +54,8 @@ func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) erro
 		row := int(math.Floor(float64(position) / float64(l.ColumnCount)))
 		column := position % l.ColumnCount
 
-		pdf.SetX(columnWidth * float64(column))
-		pdf.SetY(rowHeight * float64(row))
+		pdf.SetX(columnWidth*float64(column) + l.CellXPadding)
+		pdf.SetY(rowHeight*float64(row) + l.CellYPadding)
 
 		fmt.Printf("Position: %d, row: %d, column: %d\n", position, row, column)
 		// todo: split text
