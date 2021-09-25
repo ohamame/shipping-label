@@ -52,7 +52,7 @@ func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) erro
 
 	columnWidth := l.PageSize.W / float64(l.ColumnCount)
 	rowHeight := l.PageSize.H / float64(l.RowCount)
-	textWidth := columnWidth - (2 * l.CellXPadding)
+	textWidth := (columnWidth - (2 * l.CellXPadding)) * 0.7
 	fmt.Printf("Page size: %f x %f\nCol Width:%f\nRow Height:%f\nText Width: %f\n", l.PageSize.H, l.PageSize.W, columnWidth, rowHeight, textWidth)
 
 	// TODO: paging
@@ -60,8 +60,8 @@ func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) erro
 		position := i // TODO: allow offset
 		row := int(math.Floor(float64(position) / float64(l.ColumnCount)))
 		column := position % l.ColumnCount
-		startX := columnWidth*float64(column) + l.CellXPadding
-		startY := rowHeight*float64(row) + l.CellYPadding
+		startX := columnWidth * float64(column)
+		startY := rowHeight * float64(row)
 
 		fmt.Printf("Position: %d, row: %d, column: %d\n", position, row, column)
 		lines, err := pdf.SplitText(c.Address, textWidth)
@@ -71,8 +71,10 @@ func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) erro
 
 		// Output each line as text
 		for i, line := range lines {
-			lineStartY := startY + (l.LineHeight * float64(i))
-			pdf.SetX(startX)
+			lineStartX := startX + l.CellXPadding
+			lineStartY := startY + rowHeight - (l.CellYPadding * 2) - (l.LineHeight * float64(len(lines)-i))
+
+			pdf.SetX(lineStartX)
 			pdf.SetY(lineStartY)
 
 			err = pdf.Cell(nil, line)
