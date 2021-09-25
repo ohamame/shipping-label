@@ -16,8 +16,30 @@ func main() {
 	}
 	defer f.Close()
 
+	// create test data
+	contents := []label.LabelContent{
+		{
+			Address: "Lorem ipsum dolor sit amet",
+		},
+		{
+			Address: "Lorem ipsum dolor sit amet 2",
+		},
+		{
+			Address: "Lorem ipsum dolor sit amet 3",
+		},
+		{
+			Address: "Lorem ipsum dolor sit amet 4",
+		},
+		{
+			Address: "Lorem ipsum dolor sit amet 5",
+		},
+		{
+			Address: "Lorem ipsum dolor sit amet 6",
+		},
+	}
+
 	l := label.NewLabel(2, 6, *gopdf.PageSizeA4, 10)
-	err = l.CreateShippingLabelPdf(f)
+	err = l.CreateShippingLabelPdf(f, contents)
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)
