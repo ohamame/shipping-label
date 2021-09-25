@@ -15,6 +15,7 @@ type Label struct {
 	FontSize     float64
 	CellXPadding float64
 	CellYPadding float64
+	LineHeight   float64
 }
 
 type LabelContent struct {
@@ -27,7 +28,7 @@ type LabelContent struct {
 }
 
 func NewLabel(columnCount int, rowCount int, pageSize gopdf.Rect, fontSize float64) Label {
-	return Label{ColumnCount: columnCount, RowCount: rowCount, PageSize: pageSize, FontSize: fontSize, CellXPadding: 20, CellYPadding: 15}
+	return Label{ColumnCount: columnCount, RowCount: rowCount, PageSize: pageSize, FontSize: fontSize, CellXPadding: 20, CellYPadding: 15, LineHeight: 12}
 }
 
 func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) error {
@@ -46,22 +47,33 @@ func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) erro
 
 	columnWidth := l.PageSize.W / float64(l.ColumnCount)
 	rowHeight := l.PageSize.H / float64(l.RowCount)
-	fmt.Printf("Page size: %f x %f\nCol Width:%f\nRow Height:%f\n", l.PageSize.H, l.PageSize.W, columnWidth, rowHeight)
+	textWidth := columnWidth - (2 * l.CellXPadding)
+	fmt.Printf("Page size: %f x %f\nCol Width:%f\nRow Height:%f\nText Width: %f\n", l.PageSize.H, l.PageSize.W, columnWidth, rowHeight, textWidth)
 
 	// TODO: paging
 	for i, c := range contents {
 		position := i // TODO: allow offset
 		row := int(math.Floor(float64(position) / float64(l.ColumnCount)))
 		column := position % l.ColumnCount
-
-		pdf.SetX(columnWidth*float64(column) + l.CellXPadding)
-		pdf.SetY(rowHeight*float64(row) + l.CellYPadding)
+		startX := columnWidth*float64(column) + l.CellXPadding
+		startY := rowHeight*float64(row) + l.CellYPadding
 
 		fmt.Printf("Position: %d, row: %d, column: %d\n", position, row, column)
-		// todo: split text
-		err = pdf.Cell(nil, c.Address)
+		lines, err := pdf.SplitText(c.Address, textWidth)
 		if err != nil {
 			return err
+		}
+
+		// Output each line as text
+		for i, line := range lines {
+			lineStartY := startY + (l.LineHeight * float64(i))
+			pdf.SetX(startX)
+			pdf.SetY(lineStartY)
+
+			err = pdf.Cell(nil, line)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

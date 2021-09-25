@@ -19,10 +19,10 @@ func main() {
 	// create test data
 	contents := []label.LabelContent{
 		{
-			Address: "Lorem ipsum dolor sit amet",
+			Address: "Lorem ipsum dolor sit amet. THIS IS A VERY LONG LINE TEST. TESTING VERY LONG TEXT.",
 		},
 		{
-			Address: "Lorem ipsum dolor sit amet 2",
+			Address: "Lorem ipsum dolor sit amet 2\nLine break test!!!",
 		},
 		{
 			Address: "Lorem ipsum dolor sit amet 3",
