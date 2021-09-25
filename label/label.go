@@ -1,8 +1,8 @@
 package label
 
 import (
-	"fmt"
 	"io"
+	"log"
 	"math"
 	"sort"
 	"strconv"
@@ -67,12 +67,12 @@ func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) erro
 	sort.Slice(contents, func(i, j int) bool {
 		num1, err := strconv.ParseUint(contents[i].OrderNumber, 10, 32)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return false
 		}
 		num2, err := strconv.ParseUint(contents[j].OrderNumber, 10, 32)
 		if err != nil {
-			fmt.Println(err)
+			log.Println()
 			return false
 		}
 		return num1 < num2
@@ -85,7 +85,7 @@ func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) erro
 		startIndex := page * labelsPerPage
 		endIndex := int(math.Min(float64(page*labelsPerPage+labelsPerPage), float64(len(contents))))
 		pageContents := contents[startIndex:endIndex]
-		fmt.Printf("Page size: %d", len(pageContents))
+		log.Printf("Page size: %d", len(pageContents))
 
 		pdf.AddPage()
 		err := pdf.AddTTFFont("opensans", "./fonts/opensans.ttf")
@@ -106,7 +106,7 @@ func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) erro
 		columnWidth := l.PageSize.W / float64(l.ColumnCount)
 		rowHeight := l.PageSize.H / float64(l.RowCount)
 		textWidth := (columnWidth - (2 * l.CellXPadding))
-		fmt.Printf("Page size: %f x %f\nCol Width:%f\nRow Height:%f\nText Width: %f\n", l.PageSize.H, l.PageSize.W, columnWidth, rowHeight, textWidth)
+		log.Printf("Page size: %f x %f\nCol Width:%f\nRow Height:%f\nText Width: %f\n", l.PageSize.H, l.PageSize.W, columnWidth, rowHeight, textWidth)
 
 		for i, c := range pageContents {
 			position := i // TODO: allow offset
@@ -115,7 +115,7 @@ func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) erro
 			startX := columnWidth * float64(column)
 			startY := rowHeight * float64(row)
 
-			fmt.Printf("Position: %d, row: %d, column: %d\n", position, row, column)
+			log.Printf("Position: %d, row: %d, column: %d\n", position, row, column)
 
 			// Note: Wraps word by a character limit, not particularly accurate as
 			// not all characters are equal.
