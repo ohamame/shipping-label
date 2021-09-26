@@ -13,13 +13,18 @@ import (
 )
 
 type Label struct {
-	ColumnCount  int
-	RowCount     int
-	PageSize     gopdf.Rect
-	FontSize     float64
-	CellXPadding float64
-	CellYPadding float64
-	LineHeight   float64
+	ColumnCount   int
+	RowCount      int
+	PageSize      gopdf.Rect
+	FontSize      float64
+	CellXPadding  float64
+	CellYPadding  float64
+	LineHeight    float64
+	ShowGridLines bool
+}
+
+type LabelParams struct {
+	Label
 }
 
 type LabelContent struct {
@@ -55,8 +60,8 @@ func (c LabelContent) GetText() string {
 	return strings.Join(lines, "\n")
 }
 
-func NewLabel(columnCount int, rowCount int, pageSize gopdf.Rect, fontSize float64) Label {
-	return Label{ColumnCount: columnCount, RowCount: rowCount, PageSize: pageSize, FontSize: fontSize, CellXPadding: 20, CellYPadding: 20, LineHeight: 14}
+func NewLabel(columnCount int, rowCount int, pageSize gopdf.Rect, fontSize float64, showGridLines bool) Label {
+	return Label{ColumnCount: columnCount, RowCount: rowCount, PageSize: pageSize, FontSize: fontSize, CellXPadding: 20, CellYPadding: 20, LineHeight: 14, ShowGridLines: showGridLines}
 }
 
 func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) error {
@@ -98,9 +103,11 @@ func (l Label) CreateShippingLabelPdf(w io.Writer, contents []LabelContent) erro
 			return err
 		}
 
-		err = l.drawGrids(&pdf)
-		if err != nil {
-			return err
+		if l.ShowGridLines {
+			err = l.drawGrids(&pdf)
+			if err != nil {
+				return err
+			}
 		}
 
 		columnWidth := l.PageSize.W / float64(l.ColumnCount)

@@ -61,7 +61,7 @@ func ShippingLabel(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		l := label.NewLabel(2, 4, *gopdf.PageSizeA4, 10)
+		l := label.NewLabel(2, 4, *gopdf.PageSizeA4, 10, false)
 		err = l.CreateShippingLabelPdf(w, contents)
 		if err != nil {
 			log.Println(err)

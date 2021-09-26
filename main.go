@@ -44,7 +44,7 @@ func main() {
 			panic(err)
 		}
 
-		l := label.NewLabel(2, 4, *gopdf.PageSizeA4, 10)
+		l := label.NewLabel(2, 4, *gopdf.PageSizeA4, 10, false)
 		err = l.CreateShippingLabelPdf(f, contents)
 		if err != nil {
 			panic(err)
