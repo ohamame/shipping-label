@@ -1,4 +1,4 @@
-module github.com/dsychin/ohamame-shipping-label
+module github.com/ohamame/shipping-label
 
 go 1.16
 

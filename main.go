@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/dsychin/ohamame-shipping-label/function"
-	"github.com/dsychin/ohamame-shipping-label/label"
 	"github.com/gocarina/gocsv"
+	"github.com/ohamame/shipping-label/function"
+	"github.com/ohamame/shipping-label/label"
 	"github.com/signintech/gopdf"
 )
 

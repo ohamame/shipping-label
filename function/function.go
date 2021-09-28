@@ -7,16 +7,34 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dsychin/ohamame-shipping-label/label"
 	"github.com/gocarina/gocsv"
+	"github.com/ohamame/shipping-label/label"
 	"github.com/signintech/gopdf"
 )
+
+const templateString string = `
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Ohamame Shipping Label Generator</title>
+</head>
+<body>
+	<form enctype="multipart/form-data" method="post">
+		<input type="file" name="file" id="file">
+		<button type="submit">Submit</button>
+	</form>
+</body>
+</html>
+`
 
 func ShippingLabel(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		log.Println("GET /")
-
-		tmpl := template.Must(template.ParseFiles("./template/index.gohtml"))
+		log.Println(templateString)
+		tmpl := template.Must(template.New("index").Parse(templateString))
 		err := tmpl.Execute(w, nil)
 		if err != nil {
 			log.Println(err)
